@@ -1,15 +1,21 @@
-import Nav from "@/app/component/common/Bar/Nav";
-import Sidebar from "@/app/component/common/Bar/Sidebar/Sidebar";
-import ClientPage from "@/app/component/FetchPageContenar/ClientPage";
+"use client"
+import Form from "@/app/component/common/ui/Form";
+import Input from "@/app/component/common/ui/Input";
+import singIn from "@/app/service/AuthService";
 
-export default function Home() {
+export default function LogIn() {
+
+    const handleSubmit =async (data)=>{
+
+        return await singIn(data.email,data.password)
+    }
   return (
       <main className={'flex flex-col'}>
-        <Nav />
-        <div className={'flex w-full h-full'}>
-        <Sidebar />
-        <ClientPage />
-        </div>
+        <Form handleSubmit={handleSubmit}>
+            <Input type={'text'} name={'email'} label={'Email'}/>
+            <Input type={'text'} name={'password'} label={'Password'}/>
+
+        </Form>
       </main>
   );
 }

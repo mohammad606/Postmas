@@ -2,19 +2,54 @@
 import XMark from "@/app/component/common/icons/XMarkIcon";
 import SidebarCompactItem from "@/app/component/common/Bar/Sidebar/SidebarCompactItem";
 import SidebarItem from "@/app/component/common/Bar/Sidebar/SidebarItem";
-import {useState ,Fragment} from "react";
+import {useState, Fragment, useContext} from "react";
 import MenuIcon from "@/app/component/common/icons/MenuIcon";
 import PlusIcon from "@/app/component/common/icons/PlusIcon";
 import { Dialog, Transition } from '@headlessui/react'
 import SelectPopOver from "@/app/component/common/ui/SelectPopOver";
 import Form from "@/app/component/common/ui/Form";
 import Input from "@/app/component/common/ui/Input";
+import {GroupService} from "@/app/service/GroupService";
+import SelectPopOverFrom from "@/app/component/common/ui/SelectPopOverForm";
+import {ApiService} from "@/app/service/ApiService";
+import {useQuery} from "@tanstack/react-query";
+import ApiSelect from "@/app/component/common/ui/ApiSelect";
+import {apiData, Group} from "@/app/service/module/Group";
+import {Simulate} from "react-dom/test-utils";
+import reset = Simulate.reset;
+import {ObjectPost, ReFetchPostApi} from "@/app/ProviderQuery";
+import {setCookieClient} from "@/app/actions/CookieClient";
 
 const Sidebar = ()=>{
+    const [reFetch,setReFetch] = useState(false)
+    const [groupid,setgroupid] = useState<number>(1)
+    const {data:groupId} = useQuery({
+        queryKey:['groupId',reFetch],
+        queryFn:async ()=>{
+            return await GroupService.make<GroupService>().limitToLast(1)
+        }
+    })
+    const idGroupNew = groupId?.length > 0 ? groupId[0].id +1 : 0
+    const {data:apiId} = useQuery({
+        queryKey:['apiId',groupid,reFetch],
+        queryFn:async ()=>{
+            return await ApiService.make<ApiService>().limitToLast(1,groupid)
+        }
+    })
+    const idApiNew = apiId?.length > 0 ? apiId[0].id +1: 0
+
+    const {data:group} = useQuery({
+        queryKey:['group',reFetch],
+        queryFn:async ()=>{
+            return await GroupService.make<GroupService>().ReadDataBase()
+        }
+    })
+    const groupArray =Array.isArray(group?.data) ? group.data : [];
 
     const [open,setOpen]= useState(false)
     let [isOpen, setIsOpen] = useState(false)
     let [selectType,setSelectType] = useState('Create Group')
+    const type = selectType == "Create Group" ? "group":"api"
     function closeModal() {
         setIsOpen(false)
     }
@@ -23,9 +58,47 @@ const Sidebar = ()=>{
         setIsOpen(true)
     }
 
-    const handleSubmit = (data:any)=>{
-
+    const handleSubmit =async (data:any)=>{
+        console.log(data)
+        if(type == "group"){
+            const dataSend = {
+                id:idGroupNew,
+                name:data.name,
+                type:type
+            }
+            return await GroupService.make<GroupService>().store(idGroupNew,dataSend).then((res)=>{
+                setReFetch(!reFetch)
+                closeModal()
+                return res})
+        }else {
+            const dataSend = {
+                id:idApiNew,
+                name:data.name,
+                api:data.api,
+                method:data.method
+            }
+            return await ApiService.make<ApiService>().storeApi(data.groupId,dataSend,idApiNew).then((res)=>{
+                setReFetch(!reFetch)
+                closeModal()
+                return res})
+        }
     }
+
+    const {postArray,setPostArray} = useContext(ReFetchPostApi)
+
+    const handleSelectApi = (ObjectPost:ObjectPost)=>{
+        setPostArray((prevArray: ObjectPost[]) => {
+            const exists = prevArray.some(
+                (item) => item.group === ObjectPost.group && item.api === ObjectPost.api
+            );
+            if (exists) {
+                return prevArray;
+            }
+            return [...prevArray, ObjectPost];
+        });
+        return setCookieClient("post",JSON.stringify(postArray))
+    }
+
 
     return (
         <>
@@ -57,10 +130,33 @@ const Sidebar = ()=>{
                             >
                                 <Dialog.Panel className="w-full bg-white/50 max-w-md transform overflow-hidden rounded-2xl  p-6 text-left align-middle shadow-xl transition-all">
                                    <Form handleSubmit={handleSubmit}>
-                                       <h2 className={'label text-black'}>Create :</h2>
+                                       <h2 className={'label text-white'}>Create :</h2>
                                        <SelectPopOver handleSelect={(select:string)=>setSelectType(select)} id={2} ArraySelect={['Create Group',"Add Api"]} status={selectType}/>
-                                       {selectType == "Create Group"?<Input label={'Name'} name={'name'} type={'text'}/>:
-                                        ""
+                                       {type == "group"?
+                                           <>
+                                               <Input label={'Name'} name={'name'} type={'text'}/>
+                                           </>
+                                           :
+                                        <>
+                                            <ApiSelect
+                                                onSelect={(selectedItem)=>{
+                                                    setgroupid(selectedItem?.id ?? 0)
+                                                }}
+                                                api={() =>
+                                                    GroupService.make<GroupService>().ReadDataBase()
+                                                }
+                                                required={true}
+                                                placeHolder={"Select Group name ..."}
+                                                name={"groupId"}
+                                                label={"Group Name"}
+                                                optionValue={"id"}
+                                                getOptionLabel={(data: Group) => (data.name)}
+                                            />
+                                            <Input label={'Name'} name={'name'} type={'text'}/>
+                                            <Input label={'Api'} name={'api'} type={'text'}/>
+                                            <SelectPopOverFrom  label={'method :'} handleSelect={(select:string)=>undefined} name={'method'} ArraySelect={['get',"post","delete","put"]} status={"get"}/>
+
+                                        </>
                                        }
                                    </Form>
                                 </Dialog.Panel>
@@ -83,60 +179,27 @@ const Sidebar = ()=>{
 
                 <div className={` p-4 h-[calc(100%-64px)] overflow-y-scroll ${open ? "hidden" :"w-full"}`}>
                     <ul>
-                        <SidebarCompactItem title={("Clinic Management")}>
-                            <div className="flex flex-col">
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                            </div>
-                        </SidebarCompactItem>
-                        <SidebarCompactItem title={("Clinic Management")}>
-                            <div className="flex flex-col">
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                            </div>
-                        </SidebarCompactItem>
-                        <SidebarCompactItem title={("Clinic Management")}>
-                            <div className="flex flex-col">
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/schedules"}>
-                                    {("Clinics Schedules")}
-                                </SidebarItem>
-                                <SidebarItem link={"/doctor/clinic/holidays"}>
-                                    {("Clinic Holidays")}
-                                </SidebarItem>
-                            </div>
-                        </SidebarCompactItem>
+                        {groupArray?.map((e:Group,index:number)=>{
+                            const api = (e?.api && e?.api?.length > 0) ? e.api : []
+                            return (
+                                <SidebarCompactItem title={e.name} key={index}>
+                                    <div className="flex flex-col">
+                                        {api.map((f:apiData,indexApi)=>{
+                                            return (
+                                                <SidebarItem key={indexApi} onClick={(e)=>{
+                                                    handleSelectApi({
+                                                        group:index,
+                                                        api:f.id
+                                                    })
+                                                }}>
+                                                    {f?.name}
+                                                </SidebarItem>
+                                            )
+                                        })}
+                                    </div>
+                                </SidebarCompactItem>
+                            )
+                        })}
                     </ul>
                 </div>
             </div>

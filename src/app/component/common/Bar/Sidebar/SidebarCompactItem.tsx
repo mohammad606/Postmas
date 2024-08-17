@@ -4,12 +4,14 @@ import ChevronDown from "@/app/component/common/icons/ChevronDown";
 const SidebarCompactItem = ({
   title,
   children,
+    key
 }: {
   title: string;
+  key:number
   children: ReactNode;
 }) => {
   return (
-    <li>
+    <li key={key}>
       <details className="group [&_summary::-webkit-details-marker]:hidden">
         <summary className="flex cursor-pointer items-center justify-between rounded-lg  px-4 py-4  text-white hover:bg-gray-100 hover:text-gray-700">
           <span className="text-sm font-medium"> {title} </span>

@@ -4,35 +4,30 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const SidebarItem = ({
-  link = "#",
+  key ,
   children,
   onClick,
 }: {
-  link?: string;
+  key: number;
   children: ReactNode;
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void;
 }) => {
   const pathname = usePathname();
   let active: string;
-  if (pathname == link) {
-    active = "bg-blue-100 text-white hover:text-blue-600 hover:bg-blue-200";
-  } else {
-    active = "text-white hover:bg-gray-100 hover:text-gray-700";
-  }
+
   return (
-    <li
+    <li key={key}
       onClick={(e) => {
         if (onClick) {
           onClick(e);
         }
       }}
     >
-      <Link
-        href={link}
-        className={`block rounded-lg text-white  px-4 py-4 text-sm font-medium ${active}`}
+      <div
+        className={`block rounded-lg text-white  px-4 py-4 text-sm font-medium `}
       >
         {children}
-      </Link>
+      </div>
     </li>
   );
 };

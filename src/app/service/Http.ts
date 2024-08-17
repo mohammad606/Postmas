@@ -1,4 +1,5 @@
 import axios from "axios";
+import {getCookieServer} from "@/app/actions/CookieServar";
 
 export const GET = async (
     url: string,
@@ -36,7 +37,8 @@ const http = async (
     data?: object | undefined,
 ): Promise<any> => {
 
-    const urlApi = `${process.env.localApi}`
+    const token = await getCookieServer('token')
+    const urlApi = `${process.env.localApi}${token}/`
     const config = {
         params: params,
         baseURL: urlApi,

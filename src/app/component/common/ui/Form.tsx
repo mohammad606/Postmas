@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import {FormProvider, useForm} from "react-hook-form";
 
 
 const Form = ({
@@ -10,6 +10,7 @@ const Form = ({
                   defaultValues = {},
                   buttonText = "Submit",
                   showToastMessage = true,
+                  disableBtn = false
               }: {
     children: React.ReactNode;
     handleSubmit: (data: any) =>any;
@@ -17,19 +18,13 @@ const Form = ({
     onSuccess?: (res: any) => void;
     buttonText?: string;
     showToastMessage?: boolean;
+    disableBtn?:boolean
 }) => {
     // @ts-ignore
     const methods = useForm({ defaultValues: defaultValues });
 
     const onSubmit = async (data: any) => {
-        const res = await handleSubmit(data);
-
-        if (!res.hasValidationErrors() && res.code == 200) {
-            if (onSuccess) onSuccess(res);
-        } else {
-            res.fillValidationErrors(methods);
-        }
-        return res;
+        return await handleSubmit(data);
     };
 
 
@@ -41,26 +36,29 @@ const Form = ({
             >
 
                 {children}
-                <div
-                    className="flex justify-center items-center my-5"
-                    onClick={() => {
-                        methods.clearErrors();
-                    }}
-                >
-                    <button
-                        className={'btn bg-pom text-white hover:text-pom hover:bg-white hover:border-pom'}
-                        type="submit"
-                        disabled={methods.formState.isSubmitting}
+                {disableBtn?"":
+                    <div
+                        className="flex justify-center items-center my-5"
+                        onClick={() => {
+                            methods.clearErrors();
+                        }}
                     >
-                        {buttonText}{" "}
-                        {methods.formState.isSubmitting ? (
-                            <span className="mx-1">
+                        <button
+                            className={'btn bg-pom text-white hover:text-pom hover:bg-white hover:border-pom'}
+                            type="submit"
+                            disabled={methods.formState.isSubmitting}
+                        >
+                            {buttonText}{" "}
+                            {methods.formState.isSubmitting ? (
+                                <span className="mx-1">
               </span>
-                        ) : (
-                            ""
-                        )}
-                    </button>
-                </div>
+                            ) : (
+                                ""
+                            )}
+                        </button>
+                    </div>}
+
+
             </form>
         </FormProvider>
     );

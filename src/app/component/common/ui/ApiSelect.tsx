@@ -1,9 +1,11 @@
 "use client";
 import React, { useEffect, useRef, useState,ChangeEvent, HTMLProps, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
-import {getNestedPropertyValue} from "@/app/service/module/Respons";
-import {useInfiniteQuery} from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import {filter} from "minimatch";
+import {ApiResponse, getNestedPropertyValue} from "@/app/service/module/Respons";
 import ChevronDown from "@/app/component/common/icons/ChevronDown";
+import LoadingSpin from "@/app/component/common/icons/LoadinfSpin";
 export interface Option {
     label: any;
     value: any;
@@ -14,9 +16,6 @@ export interface SelectInputProps
         HTMLProps<HTMLInputElement>,
         "name" | "className" | "value" | "onInput" | "ref" | "onChange"
     > {}
-
-class ApiResponse<T> {
-}
 
 export interface IApiSelectProps<TResponse, TData> {
     filtarItems?:string[]
@@ -326,7 +325,7 @@ function ApiSelect<TResponse, TData>({
                                 {styles?.loadingIcon ? (
                                     styles.loadingIcon()
                                 ) : (
-                                  ""
+                                    <LoadingSpin className="w-full h-full text-pom" />
                                 )}
                             </div>
                         )}
@@ -350,11 +349,9 @@ function ApiSelect<TResponse, TData>({
 
 
                     {data?.pages?.map((res) => {
-
                         const items = getDataArray
                             ? getDataArray(res) ?? []
-                            // @ts-ignore
-                            : (res?.data as TData[]);
+                            : (res.data as TData[]);
                         return items?.map((item, index) => {
                             if(filtarItems){
                                 if(!filtarItems.includes(getOption(item).label)){
@@ -396,7 +393,7 @@ function ApiSelect<TResponse, TData>({
 
                     {isFetching && (
                         <div className="flex justify-center items-center my-2 w-full">
-                            o
+                            <LoadingSpin className={'w-8 h-8'}/>
                         </div>
                     )}
                 </div>

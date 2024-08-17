@@ -3,6 +3,8 @@ import { ref, set ,update } from "firebase/database";
 import {app,dataApp} from "@/app/lib/firebase";
 import {ApiResponse} from "@/app/service/module/Respons";
 import {isArray} from "util";
+import {getCookieServer} from "@/app/actions/CookieServar";
+import {apiData, Group} from "@/app/service/module/Group";
 
 
 export class BaseService<T> {
@@ -50,11 +52,17 @@ export class BaseService<T> {
     }
 
     public async store(id: number | string,dataSend:any): Promise<ApiResponse<T>> {
+        const token = await getCookieServer('token');
 
-        const res = await set(ref(dataApp,`${this.baseUrl}/${id}`), dataSend);
+        const res = await set(ref(dataApp,`${token}/${this.baseUrl}/${id}`), dataSend);
         return await this.errorHandler(res);
     }
+    public async storeApi(idGroup: number | string,dataSend:any,idApi:number): Promise<ApiResponse<T>> {
+        const token = await getCookieServer('token');
 
+        const res = await set(ref(dataApp,`${token}/group/${idGroup}/${this.baseUrl}/${idApi}`), dataSend);
+        return await this.errorHandler(res);
+    }
     public async delete(id: number):  Promise<ApiResponse<T>> {
 
         try {
@@ -71,18 +79,19 @@ export class BaseService<T> {
         return await this.errorHandler(res);
     }
 
-    public async limitToLast(limit:number):Promise<any> {
-
-        const dataRef =await app.database().ref(`${this.baseUrl}`).limitToLast(limit);
+    public async limitToLast(limit:number,idGroup?:number):Promise<any> {
+        const token = await getCookieServer('token');
+        const url = this.baseUrl == "group" ? this.baseUrl :`/group/${idGroup}/api`
+        const dataRef =await app.database().ref(`${token}/${url}`).limitToLast(limit);
 
         const snapshot = await dataRef.once('value');
 
         if (snapshot.exists() ) {
-            const rawData = snapshot.val();
+            const rawData: Group[] | apiData[] = snapshot.val();
             const cleanedData = Object.values(rawData).filter((item): item is T => item !== null);
 
             return this.errorHandler(cleanedData);
-        }else       console.log(`${this.baseUrl}`)
+        }
 
     }
 
