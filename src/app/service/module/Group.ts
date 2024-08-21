@@ -11,5 +11,13 @@ export interface apiData{
     id:number,
     name:string,
     api:string,
-    method:string
+    method:string,
+    headers?:any
+    group_id:number
+    params:any
+    auth_log?:boolean,
+    auth?:string
+    token?:string
+    body:string
+
 }

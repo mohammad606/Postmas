@@ -13,3 +13,8 @@ ul{
   list-style: none;
 
 }
+
+.react-json-view{
+  background-color: #1f2937 !important;
+  height: 100% !important;
+}

@@ -10,14 +10,18 @@ import {apiData, Group} from "@/app/service/module/Group";
 export class BaseService<T> {
     protected static instance?: BaseService<any>;
     public baseUrl = "/";
+    public actor: number = 0;
+    protected headers: Record<string, any> = {};
 
-    constructor() {}
+    protected constructor() {}
 
-    public static make<Service extends BaseService<any>>(): Service {
+    public static make<Service extends BaseService<any>>(
+        actor = 0,
+    ): Service {
         if (!this.instance) {
             this.instance = new this();
         }
-
+        this.instance.actor = actor;
         this.instance.baseUrl = this.instance.getBaseUrl();
 
         return this.instance as Service;
@@ -63,6 +67,18 @@ export class BaseService<T> {
         const res = await set(ref(dataApp,`${token}/group/${idGroup}/${this.baseUrl}/${idApi}`), dataSend);
         return await this.errorHandler(res);
     }
+    public async update(id: number | string,dataSend:any):Promise<ApiResponse<T>> {
+        const token = await getCookieServer('token');
+        const res = await update(ref(dataApp,`${token}/${this.baseUrl}/${id}`),dataSend)
+        return await this.errorHandler(res);
+    }
+    public async updateApi(idGroup: number | string,dataSend:any,idApi:number):Promise<ApiResponse<T>> {
+        const token = await getCookieServer('token');
+        const res = await update(ref(dataApp,`${token}/group/${idGroup}/${this.baseUrl}/${idApi}`),dataSend)
+        return await this.errorHandler(res);
+    }
+
+
     public async delete(id: number):  Promise<ApiResponse<T>> {
 
         try {
@@ -73,11 +89,6 @@ export class BaseService<T> {
         }
     }
 
-    public async update(id: number, dataSend: any):Promise<ApiResponse<T>> {
-
-        const res = await update(ref(dataApp,`${this.baseUrl}/${id}`),dataSend)
-        return await this.errorHandler(res);
-    }
 
     public async limitToLast(limit:number,idGroup?:number):Promise<any> {
         const token = await getCookieServer('token');

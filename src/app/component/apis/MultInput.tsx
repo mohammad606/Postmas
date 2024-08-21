@@ -7,7 +7,7 @@ interface InputField {
     value: string;
 }
 
-const OtherDataInput = ({ defaultValues }: { defaultValues?: string }) => {
+const MultInput = ({ lable,defaultValues }: { lable:string,defaultValues?: string }) => {
     const parseJsonString = (jsonString: string | undefined): InputField[] => {
         if (!jsonString) {
             return [];
@@ -61,7 +61,7 @@ const OtherDataInput = ({ defaultValues }: { defaultValues?: string }) => {
     return (
         <div>
             <div className="flex justify-between">
-                <h1 className="content-center card-title">{("Params")} :</h1>
+                <h1 className="content-center card-title">{lable} :</h1>
                 <button
                     type={"button"}
                     className="btn btn-accent"
@@ -106,4 +106,4 @@ const OtherDataInput = ({ defaultValues }: { defaultValues?: string }) => {
     );
 };
 
-export default OtherDataInput;
+export default MultInput;

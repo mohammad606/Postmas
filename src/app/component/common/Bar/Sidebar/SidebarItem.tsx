@@ -4,11 +4,9 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const SidebarItem = ({
-  key ,
   children,
   onClick,
 }: {
-  key: number;
   children: ReactNode;
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void;
 }) => {
@@ -16,7 +14,7 @@ const SidebarItem = ({
   let active: string;
 
   return (
-    <li key={key}
+    <li
       onClick={(e) => {
         if (onClick) {
           onClick(e);

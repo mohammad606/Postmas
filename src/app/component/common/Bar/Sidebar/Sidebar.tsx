@@ -15,8 +15,6 @@ import {ApiService} from "@/app/service/ApiService";
 import {useQuery} from "@tanstack/react-query";
 import ApiSelect from "@/app/component/common/ui/ApiSelect";
 import {apiData, Group} from "@/app/service/module/Group";
-import {Simulate} from "react-dom/test-utils";
-import reset = Simulate.reset;
 import {ObjectPost, ReFetchPostApi} from "@/app/ProviderQuery";
 import {setCookieClient} from "@/app/actions/CookieClient";
 
@@ -29,14 +27,14 @@ const Sidebar = ()=>{
             return await GroupService.make<GroupService>().limitToLast(1)
         }
     })
-    const idGroupNew = groupId?.length > 0 ? groupId[0].id +1 : 0
+    const idGroupNew =groupId && groupId?.length > 0 ? groupId[0].id +1 : 0
     const {data:apiId} = useQuery({
         queryKey:['apiId',groupid,reFetch],
         queryFn:async ()=>{
             return await ApiService.make<ApiService>().limitToLast(1,groupid)
         }
     })
-    const idApiNew = apiId?.length > 0 ? apiId[0].id +1: 0
+    const idApiNew =apiId && apiId?.length > 0 ? apiId[0].id +1: 0
 
     const {data:group} = useQuery({
         queryKey:['group',reFetch],
@@ -73,9 +71,11 @@ const Sidebar = ()=>{
         }else {
             const dataSend = {
                 id:idApiNew,
+                group_id:data.groupId,
                 name:data.name,
                 api:data.api,
-                method:data.method
+                method:data.method,
+                auth_log:false
             }
             return await ApiService.make<ApiService>().storeApi(data.groupId,dataSend,idApiNew).then((res)=>{
                 setReFetch(!reFetch)
@@ -182,22 +182,26 @@ const Sidebar = ()=>{
                         {groupArray?.map((e:Group,index:number)=>{
                             const api = (e?.api && e?.api?.length > 0) ? e.api : []
                             return (
-                                <SidebarCompactItem title={e.name} key={index}>
-                                    <div className="flex flex-col">
-                                        {api.map((f:apiData,indexApi)=>{
-                                            return (
-                                                <SidebarItem key={indexApi} onClick={(e)=>{
-                                                    handleSelectApi({
-                                                        group:index,
-                                                        api:f.id
-                                                    })
-                                                }}>
-                                                    {f?.name}
-                                                </SidebarItem>
-                                            )
-                                        })}
-                                    </div>
-                                </SidebarCompactItem>
+                               <div key={index}>
+                                   <SidebarCompactItem title={e.name} >
+                                       <div className="flex flex-col">
+                                           {api.map((f:apiData,indexApi)=>{
+                                               return (
+                                                 <div  key={indexApi}>
+                                                     <SidebarItem onClick={(e)=>{
+                                                         handleSelectApi({
+                                                             group:index,
+                                                             api:f.id
+                                                         })
+                                                     }}>
+                                                         {f?.name}
+                                                     </SidebarItem>
+                                                 </div>
+                                               )
+                                           })}
+                                       </div>
+                                   </SidebarCompactItem>
+                               </div>
                             )
                         })}
                     </ul>
